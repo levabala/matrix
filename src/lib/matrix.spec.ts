@@ -12,13 +12,13 @@ import {
   multiplyM,
   multiplyV,
   normalizeR,
+  sameV,
   slice,
   substractR,
   substractV,
   transposeM,
 } from './matrix';
 import { last } from './utility';
-
 
 test('columns', t => {
   const m1: Matrix = [[1, 2, 3], [4, 5, 6]];
@@ -67,6 +67,9 @@ test('vector', t => {
 
   t.deepEqual(v3, [1, 1, 1], 'substract');
   t.deepEqual(v4, [4, 6, 8], 'multiply');
+
+  t.true(sameV([1, 2, 3], [1, 2, 3]), 'equality 1');
+  t.false(sameV([1, 2, 6], [1, 2, 3]), 'equality 2');
 });
 
 test('base vector', t => {

@@ -4,8 +4,11 @@ export type Matrix = Vector[];
 
 export type Vector = number[];
 
-export function sameV(v1: Vector, v2: Vector): boolean {
-  return v1.reduce((acc: boolean, val) => acc && v2.indexOf(val) !== -1, true);
+export function sameV(v1: Vector, v2: Vector, innac: number = 0): boolean {
+  return v1.reduce(
+    (acc: boolean, val, i) => acc && Math.abs(v2[i] - val) <= innac,
+    true
+  );
 }
 
 export function substractV(v1: Vector, v2: Vector): Vector {
@@ -88,18 +91,23 @@ export function baseVector(
   );
 }
 
-export function m2str(m: Matrix): string {
+export function m2str(m: Matrix, fixed = 5): string {
   const maxLength = m.reduce(
     (acc: number, v) =>
-      v.reduce((_, v2) => Math.max(v2.toString().length, acc), 0),
+      v.reduce((_, v2) => Math.max(v2.toFixed(fixed).length, acc), 0),
     0
   );
+
   return `[\n${m
     .map(
       row =>
-        `  ${row.map(s => s.toString().padStart(maxLength + 1)).join(', ')}`
+        `  ${row.map(s => s.toFixed(fixed).padStart(maxLength + 1)).join(', ')}`
     )
     .join('\n')}\n]`;
+}
+
+export function v2str(v: Vector, fixed = 5): string {
+  return `[${v.map(el => el.toFixed(fixed)).join(', ')}]`;
 }
 
 export function printM(m: Matrix): void {
@@ -146,3 +154,24 @@ export function multiplyM(m1: Matrix, m2: Matrix): Matrix {
 export function extractBase(m: Matrix): Vector {
   return last(getColumns(m));
 }
+
+// export function getBaseDistinct(matrix: Matrix) : Matrix {
+//   function deeper(m: Matrix) : Matrix {
+//     const bVector = last(getColumns(m));
+//     const solved = bVector.every(b => b);
+
+//     if (solved)
+//       return m;
+
+//     const highlightRowElement = bVector.filter(b => b < 0).reduce((acc, val) => Math.max(Math.abs(acc), Math.abs(val)));
+//     const highlightRowIndex = bVector.indexOf(highlightRowElement);
+//     const highlightRow = m[highlightRowIndex];
+
+//     const m2 = m.map(row => substractV(row, highlightRow));
+//     const m3 = multipleR(m2, highlightRowIndex, -1);
+
+//   }
+
+//   const m1 = gaussian(matrix);
+
+// }
