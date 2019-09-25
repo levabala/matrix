@@ -3387,6 +3387,11 @@ pinkie@^2.0.0:
   resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
   integrity sha1-clVrgM+g1IqXToDnckjoDtT3+HA=
 
+pipe-ts@^0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/pipe-ts/-/pipe-ts-0.0.7.tgz#c90fc08b6fe64671c41ffa0a85f7e0917cb41bad"
+  integrity sha512-mNW5FuZs2XKcXrPjlxMPIRw4lKm1NXJyzg2HU/1O6TAgEuWKSfiKpejMH6Z8LLeTyewto2CqEJSke2blbXXx9w==
+
 pkg-conf@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/pkg-conf/-/pkg-conf-3.1.0.tgz#d9f9c75ea1bae0e77938cde045b276dac7cc69ae"

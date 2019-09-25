@@ -1,22 +1,41 @@
-import { last, shell } from './utility';
+import { pipeWith } from 'pipe-ts';
 
+import { Complex } from './complex';
+import { last, shell } from './utility';
+import { Value } from './value';
+
+export type Vector = Complex[];
 export type Matrix = Vector[];
 
-export type Vector = number[];
+export function createMatrix(values: number[][]): Matrix {
+  return values.map(row => row.map(val => Complex.num(val)));
+}
+
+export function numerize(m: Matrix): number[][] {
+  return ((m.length === undefined ? [m] : m) as Matrix).map(row =>
+    row.map(val => (val.get(Symbol.for('number')) as Value).numeric)
+  );
+}
 
 export function sameV(v1: Vector, v2: Vector, innac: number = 0): boolean {
   return v1.reduce(
-    (acc: boolean, val, i) => acc && Math.abs(v2[i] - val) <= innac,
+    (acc: boolean, val, i) =>
+      acc &&
+      pipeWith(
+        Complex.substract(v2[i], val),
+        Complex.abs,
+        Complex.sumNumeric
+      ) <= innac,
     true
   );
 }
 
 export function substractV(v1: Vector, v2: Vector): Vector {
-  return v1.map((el, i) => el - v2[i]);
+  return v1.map((el, i) => Complex.substract(el, v2[i]));
 }
 
-export function multiplyV(v: Vector, coeff: number): Vector {
-  return v.map(el => el * coeff);
+export function multiplyV(v: Vector, coeff: Complex): Vector {
+  return v.map(el => Complex.multiply(el, coeff));
 }
 
 export function width(m: Matrix): number {
@@ -50,12 +69,16 @@ export function slice(
     .map(row => row.slice(x1, x2 <= 0 ? width(m) + x2 : x2));
 }
 
-export function multipleR(m: Matrix, rowIndex: number, coeff: number): Matrix {
-  return m.map((row, i) => (i === rowIndex ? row.map(el => el * coeff) : row));
+export function multipleR(m: Matrix, rowIndex: number, coeff: Complex): Matrix {
+  return m.map((row, i) =>
+    i === rowIndex ? row.map(el => Complex.multiply(el, coeff)) : row
+  );
 }
 
-export function divideR(m: Matrix, rowIndex: number, coeff: number): Matrix {
-  return m.map((row, i) => (i === rowIndex ? row.map(el => el / coeff) : row));
+export function divideR(m: Matrix, rowIndex: number, coeff: Complex): Matrix {
+  return m.map((row, i) =>
+    i === rowIndex ? row.map(el => Complex.divide(el, coeff)) : row
+  );
 }
 
 export function substractR(
@@ -64,7 +87,9 @@ export function substractR(
   row2Index: number
 ): Matrix {
   return m.map((row, i1) =>
-    i1 === row1Index ? row.map((el, i2) => el - m[row2Index][i2]) : row
+    i1 === row1Index
+      ? row.map((el, i2) => Complex.substract(el, m[row2Index][i2]))
+      : row
   );
 }
 
@@ -94,20 +119,25 @@ export function baseVector(
 export function m2str(m: Matrix, fixed = 5): string {
   const maxLength = m.reduce(
     (acc: number, v) =>
-      v.reduce((_, v2) => Math.max(v2.toFixed(fixed).length, acc), 0),
+      v.reduce(
+        (_, v2) => Math.max(Complex.stringify(v2, fixed).length, acc),
+        0
+      ),
     0
   );
 
   return `[\n${m
     .map(
       row =>
-        `  ${row.map(s => s.toFixed(fixed).padStart(maxLength + 1)).join(', ')}`
+        `  ${row
+          .map(s => Complex.stringify(s, fixed).padStart(maxLength + 1))
+          .join(', ')}`
     )
     .join('\n')}\n]`;
 }
 
 export function v2str(v: Vector, fixed = 5): string {
-  return `[${v.map(el => el.toFixed(fixed)).join(', ')}]`;
+  return `[${v.map(el => Complex.stringify(el, fixed)).join(', ')}]`;
 }
 
 export function printM(m: Matrix): void {
@@ -126,18 +156,27 @@ export function transposeM(m: Matrix): Matrix {
 }
 
 export function differenceM(m1: Matrix, m2: Matrix): Matrix {
-  return m1.map((row, y) => row.map((el, x) => el - m2[y][x]));
+  return m1.map((row, y) =>
+    row.map((el, x) => Complex.substract(el, m2[y][x]))
+  );
 }
 
-export function sumM(m: Matrix): number {
+export function sumM(m: Matrix): Complex {
   return m.reduce(
-    (acc, row) => acc + row.reduce((acc2, value) => acc2 + value ** 2),
-    0
+    (acc, row) =>
+      Complex.sum(
+        acc,
+        row.reduce(
+          (acc2, value) => Complex.sum(acc2, Complex.multiply(value, value)),
+          Complex.num(0)
+        )
+      ),
+    Complex.num(0)
   );
 }
 
 export function calcError(actual: Matrix, expected: Matrix): number {
-  return sumM(differenceM(actual, expected));
+  return Complex.sumNumeric(sumM(differenceM(actual, expected)));
 }
 
 export function multiplyM(m1: Matrix, m2: Matrix): Matrix {
@@ -146,7 +185,10 @@ export function multiplyM(m1: Matrix, m2: Matrix): Matrix {
 
   return rows.map(row =>
     columns.map(column =>
-      row.reduce((acc, _, i) => acc + row[i] * column[i], 0)
+      row.reduce(
+        (acc, _, i) => Complex.sum(acc, Complex.multiply(row[i], column[i])),
+        Complex.num(0)
+      )
     )
   );
 }
@@ -154,6 +196,12 @@ export function multiplyM(m1: Matrix, m2: Matrix): Matrix {
 export function extractBase(m: Matrix): Vector {
   return last(getColumns(m));
 }
+
+// export function det(m: Matrix): number {
+//   const w = width(m);
+//   const h = height(m);
+
+// }
 
 // export function getBaseDistinct(matrix: Matrix) : Matrix {
 //   function deeper(m: Matrix) : Matrix {

@@ -1,8 +1,10 @@
 import test from 'ava';
 
+import { Complex } from './complex';
 import {
   baseVector,
   calcError,
+  createMatrix,
   divideR,
   gaussian,
   getColumns,
@@ -12,6 +14,7 @@ import {
   multiplyM,
   multiplyV,
   normalizeR,
+  numerize,
   sameV,
   slice,
   substractR,
@@ -20,33 +23,35 @@ import {
 } from './matrix';
 import { last } from './utility';
 
-test('columns', t => {
-  const m1: Matrix = [[1, 2, 3], [4, 5, 6]];
+const { num: n } = Complex;
 
-  const c1 = getColumns(m1);
+test('columns', t => {
+  const m1: Matrix = createMatrix([[1, 2, 3], [4, 5, 6]]);
+
+  const c1 = numerize(getColumns(m1));
   t.deepEqual(c1, [[1, 4], [2, 5], [3, 6]], '1');
 });
 
 test('rows', t => {
-  const m1: Matrix = [[1, 2, 3], [4, 5, 6]];
+  const m1: Matrix = createMatrix([[1, 2, 3], [4, 5, 6]]);
 
   const r1 = getRows(m1);
   t.deepEqual(r1, m1, '1');
 });
 
 test('row operations', t => {
-  const m1: Matrix = [[1, 2, 3], [4, 5, 6]];
-  const m2 = multipleR(m1, 0, 2);
-  const m3 = multipleR(m1, 1, 2);
+  const m1: Matrix = createMatrix([[1, 2, 3], [4, 5, 6]]);
+  const m2 = numerize(multipleR(m1, 0, n(2)));
+  const m3 = numerize(multipleR(m1, 1, n(2)));
 
-  const m4 = substractR(m1, 0, 1);
-  const m5 = substractR(m1, 1, 0);
+  const m4 = numerize(substractR(m1, 0, 1));
+  const m5 = numerize(substractR(m1, 1, 0));
 
-  const m6 = divideR(m1, 0, 2);
-  const m7 = divideR(m1, 1, 4);
+  const m6 = numerize(divideR(m1, 0, n(2)));
+  const m7 = numerize(divideR(m1, 1, n(4)));
 
-  const m8 = normalizeR(m1, 1, 0);
-  const m9 = normalizeR(m1, 0, 2);
+  const m8 = numerize(normalizeR(m1, 1, 0));
+  const m9 = numerize(normalizeR(m1, 0, 2));
 
   t.deepEqual(m2, [[2, 4, 6], [4, 5, 6]], 'first row multiple');
   t.deepEqual(m3, [[1, 2, 3], [8, 10, 12]], 'second row multiple');
@@ -59,26 +64,29 @@ test('row operations', t => {
 });
 
 test('vector', t => {
-  const v1 = [1, 2, 3];
-  const v2 = [2, 3, 4];
+  const v1 = Complex.fromArray([1, 2, 3]);
+  const v2 = Complex.fromArray([2, 3, 4]);
 
-  const v3 = substractV(v2, v1);
-  const v4 = multiplyV(v2, 2);
+  const v3 = numerize([substractV(v2, v1)]);
+  const v4 = numerize([multiplyV(v2, n(2))]);
 
-  t.deepEqual(v3, [1, 1, 1], 'substract');
-  t.deepEqual(v4, [4, 6, 8], 'multiply');
+  t.deepEqual(v3, [[1, 1, 1]], 'substract');
+  t.deepEqual(v4, [[4, 6, 8]], 'multiply');
 
-  t.true(sameV([1, 2, 3], [1, 2, 3]), 'equality 1');
-  t.false(sameV([1, 2, 6], [1, 2, 3]), 'equality 2');
+  t.true(sameV(v1, Complex.fromArray([1, 2, 3])), 'equality 1');
+  t.false(
+    sameV(Complex.fromArray([1, 2, 6]), Complex.fromArray([1, 2, 3])),
+    'equality 2'
+  );
 });
 
 test('base vector', t => {
-  const m1: Matrix = [[1, 2, 3], [4, 5, 6]];
+  const m1: Matrix = createMatrix([[1, 2, 3], [4, 5, 6]]);
 
-  const m2 = baseVector(m1, 0, 0);
-  const m3 = baseVector(m1, 0, 1);
-  const m4 = baseVector(m1, 1, 0);
-  const m5 = baseVector(m1, 1, 2);
+  const m2 = numerize(baseVector(m1, 0, 0));
+  const m3 = numerize(baseVector(m1, 0, 1));
+  const m4 = numerize(baseVector(m1, 1, 0));
+  const m5 = numerize(baseVector(m1, 1, 2));
 
   t.deepEqual(m2, [[1, 2, 3], [0, -3, -6]], 'test 1');
   t.deepEqual(
@@ -108,23 +116,23 @@ test('base vector', t => {
 });
 
 test('matrix slice', t => {
-  const m1: Matrix = [[1, 2, 3], [4, 5, 6]];
+  const m1: Matrix = createMatrix([[1, 2, 3], [4, 5, 6]]);
 
-  const m2: Matrix = slice(m1, 0, 2, 0, 2);
-  const m3: Matrix = slice(m1, 1, 2, 1, 2);
+  const m2 = numerize(slice(m1, 0, 2, 0, 2));
+  const m3 = numerize(slice(m1, 1, 2, 1, 2));
 
   t.deepEqual(m2, [[1, 2], [4, 5]], 'slice 2x2');
   t.deepEqual(m3, [[5]], 'slice 1x1');
 });
 
 test('gaussian', t => {
-  const m1: Matrix = [
+  const m1: Matrix = createMatrix([
     [2, 5, 4, 6, 7, 3],
     [8, 7, 4, 4, 7, 1],
     [1, 8, 7, 9, 0, 1],
     [8, 6, 57, 6, 2, 1],
     [3, 6, 4, 7, 8, 3]
-  ];
+  ]);
 
   const m2 = gaussian(m1);
 
@@ -139,18 +147,18 @@ test('gaussian', t => {
 });
 
 test('matrix multiplying', t => {
-  const m1 = [[3, 2, 6, 2], [5, 9, 8, 7], [4, 3, 3, 3]];
-  const m2 = [[1, 7, 6], [6, 1, 5], [9, 4, 6], [9, 3, 3]];
+  const m1: Matrix = createMatrix([[3, 2, 6, 2], [5, 9, 8, 7], [4, 3, 3, 3]]);
+  const m2: Matrix = createMatrix([[1, 7, 6], [6, 1, 5], [9, 4, 6], [9, 3, 3]]);
 
   const m3 = multiplyM(m1, m2);
 
-  const m4 = [
+  const m4: Matrix = createMatrix([
     [2, 5, 4, 6, 7, 3],
     [8, 7, 4, 4, 7, 1],
     [1, 8, 7, 9, 0, 1],
     [8, 6, 57, 6, 2, 1],
     [3, 6, 4, 7, 8, 3]
-  ];
+  ]);
 
   const res = transposeM([last(getColumns(gaussian(m4)))]);
   const m4LastColumn = slice(m4, 0, -1, 0, 0);
@@ -159,6 +167,10 @@ test('matrix multiplying', t => {
   const maxError = 10e-8;
   const error = calcError(m6, transposeM([last(getColumns(m4))]));
 
-  t.deepEqual(m3, [[87, 53, 70], [194, 97, 144], [76, 52, 66]], 'multiply1');
+  t.deepEqual(
+    numerize(m3),
+    [[87, 53, 70], [194, 97, 144], [76, 52, 66]],
+    'multiply1'
+  );
   t.true(error < maxError, 'multiply2');
 });
