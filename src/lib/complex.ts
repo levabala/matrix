@@ -10,7 +10,7 @@ function num(numeric: number): Complex {
 }
 
 export function complex(...values: Value[]): Complex {
-  return new Map(values.map(val => [val.unit, val]));
+  return new Map((values || [Value.num(0)]).map(val => [val.unit, val]));
 }
 
 export function extractKeys(
@@ -85,21 +85,33 @@ function sumNumeric(e: Complex): number {
 }
 
 function multiply(c1: Complex, c2: Complex): Complex {
-  return applyOperation(c1, c2, Value.multiply);
+  const arr2 = arr(c2);
+  // console.log(c1, c2);
+  return arr(c1)
+    .map(v1 => {
+      const r = complex(...arr2.map(v2 => Value.multiply(v1, v2)));
+      return r;
+    })
+    .reduce((acc, val) => Complex.sum(acc, val));
+  // return applyOperation(c1, c2, Value.multiply);
 }
 
 function divide(c1: Complex, c2: Complex): Complex {
   return applyOperation(c1, c2, Value.divide);
 }
 
-function stringify(c: Complex, fixed = 10): string {
+function stringify(c: Complex, fixed = 10, smartSignJoin = false): string {
   return arr(c)
-    .map(v => Value.stringify(v, fixed))
-    .join(' + ');
+    .map((v, i) => Value.stringify(v, fixed, smartSignJoin && i !== 0))
+    .join(' ');
 }
 
 function fromArray(nums: number[]): Complex[] {
   return nums.map(n => num(n));
+}
+
+function numerize(v: Complex): number {
+  return (v.get(Symbol.for('number')) || { numeric: 0 }).numeric;
 }
 
 export const Complex = {
@@ -109,6 +121,7 @@ export const Complex = {
   multiply,
   negation,
   num,
+  numerize,
   stringify,
   substract,
   sum,

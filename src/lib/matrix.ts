@@ -1,20 +1,48 @@
 import { pipeWith } from 'pipe-ts';
 
-import { Complex } from './complex';
+import { Complex, complex } from './complex';
 import { last, shell } from './utility';
 import { Value } from './value';
 
 export type Vector = Complex[];
 export type Matrix = Vector[];
 
-export function createMatrix(values: number[][]): Matrix {
+export function vector(values: Array<number | string>): Vector {
+  return values.map(val =>
+    typeof val === 'number'
+      ? Complex.num(val)
+      : complex(
+          ...val
+            .replace(/ /g, '')
+            .split('+')
+            .map(s => {
+              const num = parseFloat(s.replace(/[^0-9]/g, ''));
+              const unit = Symbol.for(s.replace(/[0-9]/g, ''));
+              return {
+                numeric: isNaN(num) ? 1 : num,
+                unit
+              };
+            })
+        )
+  );
+}
+
+export function matrix(values: Array<Array<number | string>>): Matrix {
+  return values.map(row => vector(row));
+}
+
+export function matrixNumeric(values: number[][]): Matrix {
   return values.map(row => row.map(val => Complex.num(val)));
 }
 
 export function numerize(m: Matrix): number[][] {
-  return ((m.length === undefined ? [m] : m) as Matrix).map(row =>
+  return m.map(row =>
     row.map(val => (val.get(Symbol.for('number')) as Value).numeric)
   );
+}
+
+export function numerizeV(v: Vector): number[] {
+  return v.map(val => (val.get(Symbol.for('number')) as Value).numeric);
 }
 
 export function sameV(v1: Vector, v2: Vector, innac: number = 0): boolean {
@@ -197,11 +225,38 @@ export function extractBase(m: Matrix): Vector {
   return last(getColumns(m));
 }
 
-// export function det(m: Matrix): number {
-//   const w = width(m);
-//   const h = height(m);
+export function det(m: Matrix): Complex {
+  const size = width(m);
 
-// }
+  switch (size) {
+    case 0:
+      throw new Error('zero matrix');
+    case 1:
+      return m[0][0];
+    case 2:
+      return Complex.substract(
+        Complex.multiply(m[0][0], m[1][1]),
+        Complex.multiply(m[1][0], m[0][1])
+      );
+    default:
+      const withoutTopRow = m.slice(1);
+      const columns = getColumns(withoutTopRow);
+
+      return m[0].reduce((acc: Complex, val, i) => {
+        const accFunc = i % 2 === 0 ? Complex.sum : Complex.substract;
+        const minor = columns.filter((_, i2) => i2 !== i);
+
+        const minorDet = det(minor);
+        const res = Complex.multiply(val, minorDet);
+        console.log();
+        console.log('val', val);
+        console.log('minorDet', minorDet);
+        console.log('res', res);
+
+        return accFunc(acc, res);
+      }, complex());
+  }
+}
 
 // export function getBaseDistinct(matrix: Matrix) : Matrix {
 //   function deeper(m: Matrix) : Matrix {
