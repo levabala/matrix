@@ -7,10 +7,11 @@ import {
   det,
   divideR,
   gaussian,
+  getBaseDistinct,
   getColumns,
   getRows,
-  Matrix,
   matrix,
+  Matrix,
   matrixNumeric,
   multipleR,
   multiplyM,
@@ -213,4 +214,26 @@ test('complex calculations', t => {
   printM(m1);
 
   t.pass('done?');
+});
+
+test('distinct', t => {
+  const m = matrixNumeric([
+    [1, -1, -2, 0, -1, -1, 0, 2],
+    [0, 1, -3, -1, -1, 0, -1, -26],
+    [1, 0, 1, 1, 0, -1, -1, 17]
+  ]);
+
+  const m2 = getBaseDistinct(m);
+  printM(m2);
+
+  const m3 = matrixNumeric([
+    [1, -1, -1, -1, 1, 0, -46],
+    [0, -2, -1, -3, 1, 1, 4],
+    [3, 0, 2, 1, -1, -1, 2]
+  ]);
+
+  const m4 = getBaseDistinct(m3);
+  printM(m4);
+
+  t.pass('nani?');
 });

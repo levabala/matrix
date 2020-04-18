@@ -25,9 +25,6 @@ function processMatrix(
   executions++;
   if (executions % 100 === 0) console.log(executions);
 
-  // console.log(deepness);
-  // console.log(`process matrix\n${m2str(m)}`);
-
   const configs = shell(height(m))
     .map((_, y) => shell(width(m) - 1).map((_, x) => ({ x, y })))
     .reduce((acc, val) => [...acc, ...val])
@@ -37,7 +34,6 @@ function processMatrix(
     );
 
   const missingConfigs = configs.filter(({ x, y }) => !m[y][x]);
-  // console.log(missingConfigs);
 
   function extractXes(m: Matrix): Record<number, number> {
     return getColumns(m).reduce(
@@ -68,8 +64,6 @@ function processMatrix(
     }));
 
   const baseVectors: number[][] = results
-    // .filter(({ b }) => b.some(e => e))
-    // .filter(({ b }) => results.filter(({ b: b2 }) => sameV(b, b2)).length === 1)
     .reduce(
       (
         acc: {

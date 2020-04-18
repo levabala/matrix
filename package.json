@@ -1,5 +1,5 @@
 {
-  "name": "matrix",
+  "name": "@levabala/matrix",
   "version": "1.0.2",
   "description": "matrix operations",
   "main": "build/main/index.js",

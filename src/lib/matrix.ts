@@ -6,6 +6,8 @@ import { Value } from './value';
 
 export type Vector = Complex[];
 export type Matrix = Vector[];
+export type VectorN = number[];
+export type MatrixN = VectorN[];
 
 export function vector(values: Array<number | string>): Vector {
   return values.map(val =>
@@ -248,33 +250,61 @@ export function det(m: Matrix): Complex {
 
         const minorDet = det(minor);
         const res = Complex.multiply(val, minorDet);
-        console.log();
-        console.log('val', val);
-        console.log('minorDet', minorDet);
-        console.log('res', res);
 
         return accFunc(acc, res);
       }, complex());
   }
 }
 
-// export function getBaseDistinct(matrix: Matrix) : Matrix {
-//   function deeper(m: Matrix) : Matrix {
-//     const bVector = last(getColumns(m));
-//     const solved = bVector.every(b => b);
+export function getBaseDistinct(m0: Matrix): Matrix {
+  console.log('getBaseDistinct');
 
-//     if (solved)
-//       return m;
+  const m1 = gaussian(m0);
 
-//     const highlightRowElement = bVector.filter(b => b < 0).reduce((acc, val) => Math.max(Math.abs(acc), Math.abs(val)));
-//     const highlightRowIndex = bVector.indexOf(highlightRowElement);
-//     const highlightRow = m[highlightRowIndex];
+  const bVector = numerizeV(last(getColumns(m1)));
+  const highlightRowElement = -bVector
+    .filter(b => b < 0)
+    .reduce((acc, val) => Math.max(Math.abs(acc), Math.abs(val)), 0);
+  const highlightRowIndex = bVector.indexOf(highlightRowElement);
 
-//     const m2 = m.map(row => substractV(row, highlightRow));
-//     const m3 = multipleR(m2, highlightRowIndex, -1);
+  const highlightRow = m1[highlightRowIndex];
 
-//   }
+  const m2 = m1.map((row, i) =>
+    i !== highlightRowIndex && Complex.numerize(row[row.length - 1]) < 0
+      ? substractV(row, highlightRow)
+      : row
+  );
+  console.log('m1:');
+  printM(m1);
 
-//   const m1 = gaussian(matrix);
+  console.log('m2:');
+  printM(m2);
 
-// }
+  const m3 = multipleR(m2, highlightRowIndex, Complex.num(-1));
+
+  function deeper(m: Matrix): Matrix {
+    console.log('deeper');
+    const highlightColumnIndex = m[highlightRowIndex].findIndex(
+      c => Complex.numerize(c) > 0
+    );
+
+    const a = Complex.numerize(m[highlightRowIndex][highlightColumnIndex]);
+    const highlight2RowIndex = m
+      .map((row, i) => [i, Complex.numerize(row[row.length - 1])])
+      .reduce(([i1, b1], [i2, b2]) =>
+        b1 / a < b2 / a ? [i1, b1] : [i2, b2]
+      )[0];
+
+    const m4 = baseVector(m, highlight2RowIndex, highlightColumnIndex);
+    console.log('m4:');
+    printM(m4);
+
+    const solved = numerizeV(last(getColumns(m4))).every(b => b >= 0);
+
+    if (solved) return m4;
+
+    return deeper(m4);
+  }
+
+  return deeper(m3);
+}
